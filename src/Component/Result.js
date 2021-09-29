@@ -24,8 +24,8 @@ export default function App({ data }) {
                     <th>machine_name</th>
                     <th>manufacturePN</th>
                     <th>manufactureComponentName</th>
-                    <th>MFGPN</th>
-                    <th>isMFGPNCorrect</th>
+                    {/* <th>MFGPN</th>
+                    <th>isMFGPNCorrect</th> */}
                 </tr>
             </thead>
             <tbody>
@@ -38,8 +38,8 @@ export default function App({ data }) {
                         <td>{item.machine_name}</td>
                         <td>{item.manufacturePN}</td>
                         <td>{item.manufactureComponentName}</td>
-                        <td>{item.MFGPN}</td>
-                        <td>{item.isMFGPNCorrect}</td>
+                        {/* <td>{item.MFGPN}</td>
+                        <td>{item.isMFGPNCorrect}</td> */}
                     </tr>
                 ))}
             </tbody>

@@ -62,10 +62,10 @@ function App(props) {
                                     ref.replace(/\s/g, '')
                             )
 
-                            const mfgPn = materialInfo.Sheet1.find(
-                                (obj) => obj.HH_PN === part.HHPN
-                            )
-                            console.log(mfgPn)
+                            // const mfgPn = materialInfo.Sheet1.find(
+                            //     (obj) => obj.HH_PN === part.HHPN
+                            // )
+                            // console.log(mfgPn)
 
                             //  console.log("5. ,match", matchPn);
                             if (matchPn.length) {
@@ -93,12 +93,12 @@ function App(props) {
                                         part.HHPN === pList.ComponentName
                                             ? 'Y'
                                             : 'N',
-                                    MFGPN: mfgPn,
-                                    isMFGPNCorrect: bom.supplerObj[
-                                        part.HHPN
-                                    ].includes(mfgPn)
-                                        ? 'Y'
-                                        : 'N',
+                                    // MFGPN: mfgPn,
+                                    // isMFGPNCorrect: bom.supplerObj[
+                                    //     part.HHPN
+                                    // ].includes(mfgPn)
+                                    //     ? 'Y'
+                                    //     : 'N',
                                 }
                             }
                         }
