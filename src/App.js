@@ -7,12 +7,16 @@ import Card from './Component/Card'
 import Button from './Component/SubmitButtion'
 import MachineData from './Utilities/MachineData'
 import Result from './Component/Result'
+import CopyButton from './Component/CopyButton'
 
 function App(props) {
     const [pnpMachineData, setPnpMachineData] = useState(MachineData)
-    const [materialInfo, setMaterialInfo] = useState([])
+    const [materialInfo, setMaterialInfo] = useState({})
     const [bom, setBom] = useState({})
     const [result, setResult] = useState([])
+    const [boardNumber, setBoardNumber] = useState('000000-0000')
+    const [copied, setCopied] = useState('')
+    const [isActive, setIsActive] = useState(false)
 
     const receivedMachineData = (obj) => {
         const updateMachineData = {
@@ -30,8 +34,53 @@ function App(props) {
     const receivedBOM = (obj) => {
         setBom(obj)
     }
+    const copyTable = () => {
+        const elTable = document.querySelector('table')
 
+        let range, sel
+
+        // Ensure that range and selection are supported by the browsers
+        if (document.createRange && window.getSelection) {
+            range = document.createRange()
+            sel = window.getSelection()
+            // unselect any element in the page
+            sel.removeAllRanges()
+
+            try {
+                range.selectNodeContents(elTable)
+                sel.addRange(range)
+            } catch (e) {
+                range.selectNode(elTable)
+                sel.addRange(range)
+            }
+
+            document.execCommand('copy')
+        }
+
+        sel.removeAllRanges()
+
+        setCopied('Copied!!')
+    }
+    // main data calculating here
     const generateReport = () => {
+        console.log('starting...')
+        if (
+            !(
+                pnpMachineData['A1-X4S'].valid &&
+                pnpMachineData['A2-X4S'].valid &&
+                pnpMachineData['A3-SX2'].valid &&
+                pnpMachineData['B1-X4S'].valid &&
+                pnpMachineData['B2-X4S'].valid &&
+                pnpMachineData['B3-X4S'].valid &&
+                pnpMachineData['B4-SX2'].valid &&
+                pnpMachineData['B5-SX2'].valid
+            )
+        ) {
+            alert('data is not complete')
+            return
+        }
+
+        console.log('pass the check 1')
         const Machine = [
             pnpMachineData['A1-X4S'].data,
             pnpMachineData['A2-X4S'].data,
@@ -45,7 +94,7 @@ function App(props) {
         let data = {}
         let isExist = false
         const compareResult = []
-
+        console.log(materialInfo)
         bom.updatedBOM.forEach((part) => {
             // console.log('1. start from part number: ', part)
 
@@ -55,20 +104,18 @@ function App(props) {
                     // console.log("3. loop the machine json");
                     machine.TraceabilityDataDetail.MaterialTraceabilityDetail.PanelList[0].PackagingUnitRefList.forEach(
                         (pList) => {
-                            // console.log("4. loop the machine packaking list");
                             const matchPn = pList.PlaceRefList.filter(
                                 (obj) =>
                                     obj.PlaceRefID.replace(/\s/g, '') ===
                                     ref.replace(/\s/g, '')
                             )
 
-                            // const mfgPn = materialInfo.Sheet1.find(
-                            //     (obj) => obj.HH_PN === part.HHPN
-                            // )
-                            // console.log(mfgPn)
-
-                            //  console.log("5. ,match", matchPn);
                             if (matchPn.length) {
+                                const pkid = pList.ManufacturePartNumber.slice(
+                                    1,
+                                    pList.ManufacturePartNumber.length
+                                )
+
                                 isExist = true
                                 data = {
                                     part_item_number: part.HHPN,
@@ -93,12 +140,26 @@ function App(props) {
                                         part.HHPN === pList.ComponentName
                                             ? 'Y'
                                             : 'N',
-                                    // MFGPN: mfgPn,
-                                    // isMFGPNCorrect: bom.supplerObj[
-                                    //     part.HHPN
-                                    // ].includes(mfgPn)
-                                    //     ? 'Y'
-                                    //     : 'N',
+                                    PKG_ID: materialInfo[pkid]
+                                        ? materialInfo[pkid][' Pkg_ID']
+                                        : '',
+                                    LotCode: materialInfo[pkid]
+                                        ? materialInfo[pkid][' Lot_No']
+                                        : '',
+                                    MFGPN: materialInfo[pkid]
+                                        ? materialInfo[pkid][' MFG_PN']
+                                        : '',
+                                    DateCode: materialInfo[pkid]
+                                        ? String(
+                                              materialInfo[pkid][' Date_Code ']
+                                          )
+                                        : '',
+                                    Vendor: materialInfo[pkid]
+                                        ? materialInfo[pkid][' Vendor']
+                                        : '',
+                                    FeederNumber: materialInfo[pkid]
+                                        ? materialInfo[pkid][' Feeder_No ']
+                                        : '',
                                 }
                             }
                         }
@@ -123,6 +184,13 @@ function App(props) {
                         msd: '',
                         DateBegin: null,
                         DateCompleted: null,
+                        isSame: '',
+                        MFGPN: '',
+                        PKG_ID: '',
+                        LotCode: '',
+                        DateCode: '',
+                        Vendor: '',
+                        FeederNumber: '',
                     }
                     compareResult.push(updateData)
                     //              const upload = Pnpdata.create({ ...updateData })
@@ -138,21 +206,31 @@ function App(props) {
             <Header />
 
             <Content>
+                <h2>
+                    Board SN:
+                    <em> {boardNumber} </em>
+                </h2>
                 <Block title="Bottom Side">
                     <Card
                         title="A1-X4S"
                         fileType="txt"
                         callback={(obj) => receivedMachineData(obj)}
+                        receivedSn={(obj) => setBoardNumber(obj)}
+                        currentSn={boardNumber}
                     />
                     <Card
                         title="A2-X4S"
                         fileType="txt"
                         callback={(obj) => receivedMachineData(obj)}
+                        receivedSn={(obj) => setBoardNumber(obj)}
+                        currentSn={boardNumber}
                     />
                     <Card
                         title="A3-SX2"
                         fileType="txt"
                         callback={(obj) => receivedMachineData(obj)}
+                        receivedSn={(obj) => setBoardNumber(obj)}
+                        currentSn={boardNumber}
                     />
                 </Block>
                 <Block title="Top Side">
@@ -160,26 +238,36 @@ function App(props) {
                         title="B1-X4S"
                         fileType="txt"
                         callback={(obj) => receivedMachineData(obj)}
+                        receivedSn={(obj) => setBoardNumber(obj)}
+                        currentSn={boardNumber}
                     />
                     <Card
                         title="B2-X4S"
                         fileType="txt"
                         callback={(obj) => receivedMachineData(obj)}
+                        receivedSn={(obj) => setBoardNumber(obj)}
+                        currentSn={boardNumber}
                     />
                     <Card
                         title="B3-X4S"
                         fileType="txt"
                         callback={(obj) => receivedMachineData(obj)}
+                        receivedSn={(obj) => setBoardNumber(obj)}
+                        currentSn={boardNumber}
                     />
                     <Card
                         title="B4-SX2"
                         fileType="txt"
                         callback={(obj) => receivedMachineData(obj)}
+                        receivedSn={(obj) => setBoardNumber(obj)}
+                        currentSn={boardNumber}
                     />
                     <Card
                         title="B5-SX2"
                         fileType="txt"
                         callback={(obj) => receivedMachineData(obj)}
+                        receivedSn={(obj) => setBoardNumber(obj)}
+                        currentSn={boardNumber}
                     />
                 </Block>
                 <Block title="Material Data">
@@ -201,7 +289,23 @@ function App(props) {
                     {' '}
                     Generate Report
                 </Button>
-                {result.length ? <Result data={result} /> : null}
+
+                {result.length ? (
+                    <div>
+                        <div
+                            style={{
+                                display: 'flex',
+                            }}
+                        >
+                            <CopyButton onClick={() => copyTable()}>
+                                Copy tables
+                            </CopyButton>
+                            <p style={{ padding: '10px' }}>{copied}</p>
+                        </div>
+
+                        <Result data={result} />
+                    </div>
+                ) : null}
             </Content>
         </div>
     )

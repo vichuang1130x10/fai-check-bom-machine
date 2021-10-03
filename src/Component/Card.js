@@ -3,7 +3,13 @@ import { Card } from 'react-bootstrap'
 import Dropzone from './Dropzone'
 import './Card.css'
 
-export default function DragCard({ title, fileType, callback }) {
+export default function DragCard({
+    title,
+    fileType,
+    callback,
+    receivedSn,
+    currentSn,
+}) {
     return (
         <Card className="card">
             <Card.Body>
@@ -12,6 +18,8 @@ export default function DragCard({ title, fileType, callback }) {
                     fileType={fileType}
                     callback={callback}
                     title={title}
+                    receivedSn={receivedSn}
+                    currentSn={currentSn}
                 />
             </Card.Body>
         </Card>

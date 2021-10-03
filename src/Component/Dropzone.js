@@ -6,7 +6,13 @@ import { parseSupplierPn } from '../Utilities/PickUpXls.js'
 import './Zone.css'
 // import { parseForYieldRate } from '../ParsingData/ParsingCMData'
 
-export default function Dropzone({ title, callback, fileType }) {
+export default function Dropzone({
+    title,
+    callback,
+    fileType,
+    receivedSn,
+    currentSn,
+}) {
     const [filename, setFilename] = useState('')
     const [isFileValid, setFileValid] = useState(false)
 
@@ -28,24 +34,59 @@ export default function Dropzone({ title, callback, fileType }) {
                         case 'txt':
                             const fixFormat = data.split('¿')[1]
                             const json = JSON.parse(fixFormat)
+                            console.log(json)
                             const machineName =
                                 json.TraceabilityDataDetail.MachineName
+                            const sn =
+                                json.TraceabilityDataDetail.PCBBarcode.split(
+                                    ' '
+                                )[0] || ''
+
                             if (title !== machineName) {
                                 alert(`The Machine name is wrong`)
                                 setFileValid(false)
-                            } else {
-                                setFileValid(true)
-                                callback({
-                                    machineName,
-                                    data: { data: json, valid: true },
-                                })
+                                break
                             }
+
+                            console.log(currentSn, sn)
+
+                            if (
+                                currentSn !== '000000-0000' &&
+                                sn !== currentSn
+                            ) {
+                                alert(`The board SN is different`)
+                                setFileValid(false)
+                                break
+                            }
+
+                            setFileValid(true)
+                            callback({
+                                machineName,
+                                data: { data: json, valid: true },
+                            })
+                            receivedSn(sn)
+
                             break
 
                         case 'csv':
                             const csvJson = readxlsx(data)
-                            console.log(csvJson)
-                            callback(csvJson)
+
+                            let updateMInfo = {}
+                            // console.log(csvJson.Sheet1)
+                            csvJson.Sheet1.forEach((obj) => {
+                                // console.log(obj[' Pkg_ID'])
+                                const pkId = obj[' Pkg_ID'] || ''
+
+                                if (
+                                    updateMInfo[pkId] === undefined ||
+                                    updateMInfo[pkId] === null
+                                ) {
+                                    updateMInfo[pkId] = obj
+                                }
+                            })
+
+                            // console.log(updateMInfo)
+                            callback(updateMInfo)
 
                             setFileValid(true)
                             break
